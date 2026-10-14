@@ -2,7 +2,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 
 export async function middleware(req, res) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRETSECRET });
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if(req.nextUrl.pathname==='/user-auth' && token){
     return NextResponse.redirect(new URL("/",req.url));
@@ -16,5 +16,5 @@ export async function middleware(req, res) {
 }
 
 export const config={
-    matcher:['/','/user-auth']
+    matcher:['/','/user-auth','/video-meeting/:path*']
 };

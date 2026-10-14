@@ -23,17 +23,10 @@ export const authOptions = {
   ],
   callbacks:{
     async jwt({token,user,account}){
-        console.log("this is token",token)
-        console.log("this is user",user)
-        console.log("this is acc",account)
-
         if(user){
             token.id=user.id;
         }
 
-        if(account){
-            token.accessToken=account.access_token;
-        }
          return token;
     },
     async session({session,token}){
@@ -42,15 +35,20 @@ export const authOptions = {
     },
 
     async signIn({user,profile}){
+        // next-auth normalises Google and GitHub profiles into `user`
+        // (GitHub profiles often have no name and no "picture" field).
+        if(!user.email){
+            return false;
+        }
         await dbConnect();
         let dbUser=await User.findOne({email:user.email})
 
         if(!dbUser){
             dbUser=await User.create({
-                name:profile.name,
-                email:profile.email,
-                profilePicture:profile.picture,
-                isVerified:profile.email_verfied?true:false
+                name:user.name || user.email.split("@")[0],
+                email:user.email,
+                profilePicture:user.image,
+                isVerified:profile?.email_verified === true
             })
         }
 
@@ -64,7 +62,7 @@ session:{
     maxAge:90*24*60*60
 },
 pages:{
-    signIn:'user-auth',
+    signIn:'/user-auth',
 }
 }
 const handle=NextAuth(authOptions)

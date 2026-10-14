@@ -10,7 +10,7 @@ export function Providers({children,session}){
     return (
         <SessionProvider session={session}>
             <ToastContainer position='top-right' autoClose={3000}/>
-            <ThemeProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                 {children}
             </ThemeProvider>
 

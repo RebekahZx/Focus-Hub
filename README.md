@@ -1,40 +1,83 @@
-<<<<<<< HEAD
-# Focus-Hub
-=======
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Focus Hub
 
-## Getting Started
+[![build](https://github.com/RebekahZx/Focus-Hub/actions/workflows/build.yml/badge.svg)](https://github.com/RebekahZx/Focus-Hub/actions/workflows/build.yml)
 
-First, run the development server:
+A video-meeting web app. Sign in with Google or GitHub, start an instant meeting or create a
+link for later, and share it. Anyone signed in who opens the link joins the same room. Built
+with Next.js 15 (App Router), NextAuth, MongoDB and Tailwind/shadcn UI; the calls run on
+embedded [Jitsi Meet](https://jitsi.org).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **Sign-in.** Google and GitHub OAuth through NextAuth. On first sign-in, a user record is
+  created in MongoDB.
+- **Protected routes.** Middleware sends signed-out visitors to `/user-auth`, so the home page
+  and meeting rooms need a session.
+- **Meetings.**
+  - "Start an instant meeting" opens a new room at `/video-meeting/<uuid>`.
+  - "Create a meeting for later" gives you a link to copy.
+  - "Join" accepts either a code or a full link.
+- **In the call.** Jitsi provides camera, microphone, screen sharing and chat. Your display
+  name comes from your account, and the room has a "Copy link" button.
+- **Light and dark themes** via `next-themes`.
+
+## How it fits together
+
+```
+src/
+  middleware.js                      session check for /, /user-auth and /video-meeting/*
+  app/
+    api/auth/[...nextauth]/route.js  OAuth providers, JWT sessions, create user on first sign-in
+    user-auth/page.jsx               sign-in page
+    page.js                          home: meeting actions + feature carousel
+    video-meeting/[roomId]/page.jsx  meeting room (Jitsi iframe, room id validated)
+  components/                        Header, MeetingAction, MeetingFeature, shadcn/ui primitives
+  lib/dbConnect.js                   cached Mongoose connection
+  models/User.js                     user schema
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run locally
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+npm install
+cp .env.example .env.local     # fill in MongoDB, NextAuth secret and the OAuth app keys
+npm run dev                    # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You need two OAuth apps: one in GitHub (Settings → Developer settings → OAuth Apps) and one in
+Google Cloud Console. Use the callback URLs listed in `.env.example`.
 
-## Learn More
+**About the call server.** By default, rooms are hosted on the public `meet.jit.si` server.
+That server is meant for trying things out when embedded in another site, and it may limit
+call length or ask participants to log in. For real use, set `NEXT_PUBLIC_JITSI_DOMAIN` to
+your own Jitsi server or a JaaS (Jitsi as a Service) domain.
 
-To learn more about Next.js, take a look at the following resources:
+## Fixed in the latest revision
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Meetings didn't exist.** Every meeting link sent you to a page that was never built (404).
+  The meeting room is now implemented.
+- **The build failed.** The `uuid` package was used but not listed as a dependency.
+- **GitHub sign-in could fail.** The user record required a name, and many GitHub profiles have
+  none. Sign-in now uses the normalised NextAuth user (name falls back to the email handle).
+- **Access tokens were logged.** OAuth tokens and profiles were printed to the server log, and
+  the GitHub access token was copied into the session token. Both are removed.
+- **Config errors.** The middleware read a misspelt environment variable, and the sign-in page
+  path was missing its leading `/`.
+- **Duplicate config.** There were two Tailwind and two PostCSS configs, and the one Tailwind
+  actually loaded had no dark-mode setting. They're merged into one each, and the theme
+  provider now sets the class Tailwind reads.
+- **Borrowed branding.** The pages hotlinked Google Meet's illustrations and promised features
+  the app doesn't have (Google Calendar scheduling, host admission). They now use local images
+  and describe what the app does.
+- **Housekeeping.** Removed commented-out duplicate code, the leftover merge-conflict markers in
+  this README, and an unused dependency. Added `.env.example` and a CI build.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Not implemented
 
-## Deploy on Vercel
+- No meeting scheduling or calendar invites.
+- No host controls or waiting room. Anyone signed in with the link can join.
+- No meeting history.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Author
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> 3d65774 (Initial commit)
+Shrinivas Anavekar · MIT License

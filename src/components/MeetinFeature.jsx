@@ -5,25 +5,25 @@ import React, { useState } from "react";
 
 const slides = [
   {
-    image:
-      "https://www.gstatic.com/meet/user_edu_get_a_link_light_90698cd7b4ca04d3005c962a3756c42d.svg",
+    image: "/images/meet_image.jpg",
     title: "Get a link you can share",
     description:
-      "Click New meeting to get a link you can send to people you want to meet with",
+      "Create a meeting for later and send the link to the people you want to meet with",
   },
   {
-    image:
-      "https://www.gstatic.com/meet/user_edu_scheduling_light_b352efa017e4f8f1ffda43e847820322.svg",
-    title: "Plan ahead",
-    description:
-      "Click New meeting to schedule meetings in Google Calendar and send invites to participants",
+    image: "/images/videoQuality.jpg",
+    title: "Start instantly",
+    description: "Start an instant meeting and join from the browser with no install",
   },
   {
-    image:
-      "https://www.gstatic.com/meet/user_edu_safety_light_e04a2bbb449524ef7e49ea36d5f25b65.svg",
-    title: "Your meeting is safe",
-    description:
-      "No one can join a meeting unless invited or admitted by the host",
+    image: "/images/screenShare.jpg",
+    title: "Share your screen",
+    description: "Present your screen, chat and see everyone in the room during the call",
+  },
+  {
+    image: "/images/videoSecure.jpg",
+    title: "Signed-in access",
+    description: "Only people signed in with Google or GitHub can create or open meetings",
   },
 ];
 
@@ -83,6 +83,7 @@ const MeetingFeature = () => {
         {slides.map((_, index) => (
           <div
             key={index}
+            aria-hidden="true"
             className={`w-3 h-3 rounded-full ${
               index == currentSlide ? "bg-blue-600" : "bg-gray-300"
             }`}

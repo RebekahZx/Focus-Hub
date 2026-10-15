@@ -2,12 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    /* graph paper */
+    background-image:
+      linear-gradient(to right, theme(colors.grid) 1px, transparent 1px),
+      linear-gradient(to bottom, theme(colors.grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  :focus-visible {
+    outline: 3px solid theme(colors.ink);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  h1, h2, h3 { @apply font-display; }
 }
 
-@layer base {
-  :root {
-    --radius: 0.5rem;
+@layer components {
+  /* A highlighter stroke behind text: a little ragged, not a perfect box. */
+  .marked {
+    background-image: linear-gradient(100deg, transparent 0.25em, theme(colors.marker) 0.4em, theme(colors.marker) calc(100% - 0.4em), transparent calc(100% - 0.2em));
+    background-size: 100% 62%;
+    background-position: 0 78%;
+    background-repeat: no-repeat;
+    padding: 0 0.12em;
   }
+  .marked-leaf { background-image: linear-gradient(100deg, transparent 0.25em, theme(colors.leaf-soft) 0.4em, theme(colors.leaf-soft) calc(100% - 0.4em), transparent calc(100% - 0.2em)); }
+  .sheet { @apply bg-white border border-grid rounded-lg; box-shadow: 0 1px 0 theme(colors.grid); }
+  .field { @apply w-full rounded-md border border-ink/25 bg-white px-3 py-2 text-ink placeholder:text-pencil/70 focus:border-ink focus:outline-none; }
+  .label { @apply block text-sm font-bold text-ink mb-1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

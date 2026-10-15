@@ -2,81 +2,100 @@
 
 [![build](https://github.com/RebekahZx/Focus-Hub/actions/workflows/build.yml/badge.svg)](https://github.com/RebekahZx/Focus-Hub/actions/workflows/build.yml)
 
-A video-meeting web app. Sign in with Google or GitHub, start an instant meeting or create a
-link for later, and share it. Anyone signed in who opens the link joins the same room. Built
-with Next.js 15 (App Router), NextAuth, MongoDB and Tailwind/shadcn UI; the calls run on
-embedded [Jitsi Meet](https://jitsi.org).
+A website for online study sessions. Plan a session, send the link to your study group, and
+everyone works through the same focus and break rounds on one shared timer. Each person keeps a
+private goal list, and there's an optional video room for studying with cameras on.
 
-## Features
+Built with Next.js 15 (App Router), NextAuth (Google and GitHub sign-in), MongoDB through
+Mongoose, and Tailwind CSS.
 
-- **Sign-in.** Google and GitHub OAuth through NextAuth. On first sign-in, a user record is
-  created in MongoDB.
-- **Protected routes.** Middleware sends signed-out visitors to `/user-auth`, so the home page
-  and meeting rooms need a session.
-- **Meetings.**
-  - "Start an instant meeting" opens a new room at `/video-meeting/<uuid>`.
-  - "Create a meeting for later" gives you a link to copy.
-  - "Join" accepts either a code or a full link.
-- **In the call.** Jitsi provides camera, microphone, screen sharing and chat. Your display
-  name comes from your account, and the room has a "Copy link" button.
-- **Light and dark themes** via `next-themes`.
+## What you can do
 
-## How it fits together
+- **Plan a session.** Set a title and subject, then choose:
+  - focus length: 25, 45, 50 or 90 minutes;
+  - break length: 5, 10 or 15 minutes;
+  - number of rounds: 1 to 8;
+  - a start time: now, or a set time up to 60 days ahead.
+- **Share it.** Every session gets a short code like `k7mp-x3vd` and a link. Guests join with
+  either, and **Add to calendar** downloads an `.ics` event for any calendar app.
+- **Study on the same clock.** Everyone sees the same round, the same break and the same time
+  left. The page title shows the countdown, and an optional chime plays at each change.
+- **Track goals.** Write down what you want to finish and tick items off. Goals stay in your
+  browser and are visible only to you.
+- **Study with company.** The video room is an embedded Jitsi Meet call that opens only when you
+  choose. Microphone and camera start off.
+- **Manage your sessions.** Your dashboard lists live, upcoming and past sessions you host.
+  The host can delete a session.
+
+## How the shared timer works
+
+There is no realtime server. A session stores only its start time and settings. Each browser
+works out the current phase from those and the clock (`src/lib/pomodoro.js`):
+
+```
+cycle   = focus + break
+elapsed = now − startsAt
+round   = floor(elapsed / cycle) + 1
+phase   = focus if (elapsed mod cycle) < focus, otherwise break   (no break after the last round)
+```
+
+Everyone with the same session data sees the same state, as long as their device clocks are
+roughly right.
+
+## Project layout
 
 ```
 src/
-  middleware.js                      session check for /, /user-auth and /video-meeting/*
   app/
-    api/auth/[...nextauth]/route.js  OAuth providers, JWT sessions, create user on first sign-in
-    user-auth/page.jsx               sign-in page
-    page.js                          home: meeting actions + feature carousel
-    video-meeting/[roomId]/page.jsx  meeting room (Jitsi iframe, room id validated)
-  components/                        Header, MeetingAction, MeetingFeature, shadcn/ui primitives
-  lib/dbConnect.js                   cached Mongoose connection
-  models/User.js                     user schema
+    page.js                       landing page with a live sample timer
+    dashboard/page.jsx            create a session, join by code, your sessions
+    s/[code]/page.jsx             the study room: timer, goals, video, invite, calendar
+    user-auth/page.jsx            sign in (shows only configured providers)
+    api/sessions/route.js         POST create, GET your sessions
+    api/sessions/[code]/route.js  GET one session, DELETE (host only)
+  lib/
+    pomodoro.js                   timer state from start time + settings
+    session.js                    input validation, session codes, link parsing
+    ics.js                        calendar export
+    auth.js                       NextAuth config
+  models/                         Mongoose models: StudySession, User
+  middleware.js                   sign-in required for /dashboard and /s/*
 ```
 
 ## Run locally
 
 ```bash
 npm install
-cp .env.example .env.local     # fill in MongoDB, NextAuth secret and the OAuth app keys
+cp .env.example .env.local     # MongoDB URI, NEXTAUTH_SECRET, and at least one OAuth app
 npm run dev                    # http://localhost:3000
 ```
 
-You need two OAuth apps: one in GitHub (Settings → Developer settings → OAuth Apps) and one in
-Google Cloud Console. Use the callback URLs listed in `.env.example`.
+Create the OAuth apps in GitHub (Settings → Developer settings → OAuth Apps) and/or Google Cloud
+Console. Use the callback URLs listed in `.env.example`.
 
-**About the call server.** By default, rooms are hosted on the public `meet.jit.si` server.
-That server is meant for trying things out when embedded in another site, and it may limit
-call length or ask participants to log in. For real use, set `NEXT_PUBLIC_JITSI_DOMAIN` to
-your own Jitsi server or a JaaS (Jitsi as a Service) domain.
+**Deploying on Vercel:** add the same variables in the project settings. `NEXTAUTH_URL` should
+be the production URL, and the OAuth apps need that URL's callback too.
 
-## Fixed in the latest revision
+## Tests
 
-- **Meetings didn't exist.** Every meeting link sent you to a page that was never built (404).
-  The meeting room is now implemented.
-- **The build failed.** The `uuid` package was used but not listed as a dependency.
-- **GitHub sign-in could fail.** The user record required a name, and many GitHub profiles have
-  none. Sign-in now uses the normalised NextAuth user (name falls back to the email handle).
-- **Access tokens were logged.** OAuth tokens and profiles were printed to the server log, and
-  the GitHub access token was copied into the session token. Both are removed.
-- **Config errors.** The middleware read a misspelt environment variable, and the sign-in page
-  path was missing its leading `/`.
-- **Duplicate config.** There were two Tailwind and two PostCSS configs, and the one Tailwind
-  actually loaded had no dark-mode setting. They're merged into one each, and the theme
-  provider now sets the class Tailwind reads.
-- **Borrowed branding.** The pages hotlinked Google Meet's illustrations and promised features
-  the app doesn't have (Google Calendar scheduling, host admission). They now use local images
-  and describe what the app does.
-- **Housekeeping.** Removed commented-out duplicate code, the leftover merge-conflict markers in
-  this README, and an unused dependency. Added `.env.example` and a CI build.
+```bash
+npm test
+```
 
-## Not implemented
+- **Unit tests (15).** The timer covers waiting, focus, break, the last round and finishing.
+  Input validation, session codes, link parsing and the calendar export are also tested.
+- **API integration tests.** These run the session routes against a real MongoDB. They cover
+  sign-in checks, validation, create, list, fetch, host-only delete and malformed codes.
+  GitHub Actions runs them with a MongoDB service; locally they're skipped unless
+  `MONGODB_URI_TEST` is set.
 
-- No meeting scheduling or calendar invites.
-- No host controls or waiting room. Anyone signed in with the link can join.
-- No meeting history.
+## Limitations
+
+- **Anyone with the link can join.** Any signed-in person with the link or code can join; there
+  is no waiting room or member list.
+- **Timer accuracy.** The shared timer depends on each person's device clock being roughly right.
+- **Video server.** The public `meet.jit.si` server may limit how long embedded calls last. For
+  regular use, set `NEXT_PUBLIC_JITSI_DOMAIN` to your own Jitsi server or a JaaS domain.
 
 ## Author
 

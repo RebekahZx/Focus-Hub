@@ -1,20 +1,12 @@
-const mongoose=require("mongoose")
+import mongoose from "mongoose";
 
-const userSchema=new mongoose.Schema({
-    name:{
-        type:String,
-        required:true
-    },
-    email:{
-        type:String,
-    },
-    profilePicture:{
-        type:String,
-    },
-    isVerified:{
-        type:Boolean,
-        required:true
-    }
-},{timestamps:true})
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    profilePicture: String,
+  },
+  { timestamps: true }
+);
 
-module.exports=mongoose.models.User||mongoose.model('User',userSchema);
+export default mongoose.models.User || mongoose.model("User", userSchema);

@@ -1,33 +1,20 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Atkinson_Hyperlegible, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./Provider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-display", weight: ["500", "700", "800"] });
+const body = Atkinson_Hyperlegible({ subsets: ["latin"], variable: "--font-body", weight: ["400", "700"] });
 
 export const metadata = {
-  title: "Focus Hub",
-  description: "Video meetings with shareable links",
+  title: { default: "Focus Hub: study sessions on a shared timer", template: "%s | Focus Hub" },
+  description: "Plan a study session, share the link, and work through the same focus and break rounds together.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
-        {children}
-        </Providers>
-        
-        
+    <html lang="en">
+      <body className={`${display.variable} ${body.variable}`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

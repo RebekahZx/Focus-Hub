@@ -5,9 +5,15 @@ on:
   pull_request:
 
 jobs:
-  build:
+  test-and-build:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
     env:
+      MONGODB_URI_TEST: mongodb://127.0.0.1:27017/focus-hub-test
       # Placeholders so the build can import modules that read them; no real services are called.
       MONGODB_URI: mongodb://127.0.0.1:27017/ci
       NEXTAUTH_SECRET: ci-placeholder
@@ -19,4 +25,5 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npm test
       - run: npx next build
